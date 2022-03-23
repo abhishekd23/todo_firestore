@@ -22,25 +22,12 @@ class TaskScreen extends StatefulWidget {
 }
 
 class _TaskScreenState extends State<TaskScreen> {
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
   String? newTask;
   String? val;
   bool? isChecked = false;
   DateTime? date;
   final CollectionReference _tasks =
       FirebaseFirestore.instance.collection('Tasks');
-
-  // void setData() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   //prefs.clear();
-  //   prefs.setStringList('Tasks', widget.tasks!);
-  //   prefs.setStringList('Check', widget.checkBox!);
-  //   prefs.setInt('Task Number', widget.num!);
-  //   prefs.setStringList('Date', widget.dates!);
-  //   prefs.setStringList('Id', widget.id!);
-  // }
 
   Future<void> _update(DocumentSnapshot? documentSnapshot, bool value) async {
     await _tasks.doc(documentSnapshot!.id).update({"check": value});
@@ -296,21 +283,20 @@ class _TaskScreenState extends State<TaskScreen> {
                               snapshot.data!.docs[index];
                           return ListTile(
                             title: Text(
-                              "${snapshot.data?.docs[index]['task']}",
-                              style:
-                                  snapshot.data?.docs[index]['check'] == 'true'
-                                      ? TextStyle(
-                                          color: Colors.green, fontSize: 25.0)
-                                      : TextStyle(
-                                          fontSize: 20.0,
-                                          fontWeight: FontWeight.bold),
+                              "${documentSnapshot['task']}",
+                              style: documentSnapshot['check'] == 'true'
+                                  ? TextStyle(
+                                      color: Colors.green, fontSize: 25.0)
+                                  : TextStyle(
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.bold),
                             ),
-                            subtitle: (snapshot.data!.docs[index]['time'])
+                            subtitle: (documentSnapshot['time'])
                                         .toDate()
                                         .difference(DateTime.now())
                                         .inMinutes >=
                                     0
-                                ? (snapshot.data?.docs[index]['check'] == 'true'
+                                ? (documentSnapshot['check'] == 'true'
                                     ? Text(
                                         "Task Completed",
                                         style: TextStyle(
@@ -319,7 +305,7 @@ class _TaskScreenState extends State<TaskScreen> {
                                         ),
                                       )
                                     : Text(
-                                        "${(snapshot.data?.docs[index]['time']).toDate().difference(DateTime.now()).inHours.toString()} hours left",
+                                        "${(documentSnapshot['time']).toDate().difference(DateTime.now()).inHours.toString()} hours left",
                                         style: TextStyle(
                                           fontSize: 12.0,
                                         ),
@@ -348,7 +334,7 @@ class _TaskScreenState extends State<TaskScreen> {
                                       textAlign: TextAlign.center,
                                     ),
                                     content: Text(
-                                      "${snapshot.data?.docs[index]['task']}",
+                                      "${documentSnapshot['task']}",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -359,9 +345,6 @@ class _TaskScreenState extends State<TaskScreen> {
                                       TextButton(
                                         onPressed: () {
                                           Navigator.pop(context, 'Cancel');
-                                          setState(() {
-                                            widget.num = widget.num!;
-                                          });
                                         },
                                         child: const Text(
                                           'Cancel',
@@ -374,7 +357,6 @@ class _TaskScreenState extends State<TaskScreen> {
                                         onPressed: () {
                                           setState(() {
                                             _deleteTask(documentSnapshot.id);
-                                            //setData();
                                           });
                                           Navigator.pop(context, 'OK');
                                         },
@@ -394,13 +376,11 @@ class _TaskScreenState extends State<TaskScreen> {
                             },
                             trailing: Checkbox(
                               activeColor: Colors.cyanAccent,
-                              value:
-                                  snapshot.data?.docs[index]['check'] == false
-                                      ? false
-                                      : true,
+                              value: documentSnapshot['check'] == false
+                                  ? false
+                                  : true,
                               onChanged: (value) async {
                                 await _update(documentSnapshot, value!);
-                                // widget.checkBox![index] = value!.toString();
                               },
                             ),
                           );
