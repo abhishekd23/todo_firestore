@@ -2,20 +2,29 @@ import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:date_field/date_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_app_firestore/login_screen.dart';
 import 'package:uuid/uuid.dart';
 
 import 'change.dart';
 
 class TaskScreen extends StatefulWidget {
-  TaskScreen({this.tasks, this.checkBox, this.num, this.dates, this.id});
+  TaskScreen(
+      {this.tasks,
+      this.checkBox,
+      this.num,
+      this.dates,
+      this.id,
+      this.phoneController});
   final List<String>? tasks;
   final List<String>? checkBox;
   final List<String>? dates;
   final List<String>? id;
   int? num;
+  TextEditingController? phoneController;
 
   @override
   _TaskScreenState createState() => _TaskScreenState();
@@ -29,12 +38,25 @@ class _TaskScreenState extends State<TaskScreen> {
   final CollectionReference _tasks =
       FirebaseFirestore.instance.collection('Tasks');
 
+  final _auth = FirebaseAuth.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
+
   Future<void> _update(DocumentSnapshot? documentSnapshot, bool value) async {
-    await _tasks.doc(documentSnapshot!.id).update({"check": value});
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(auth.currentUser!.uid)
+        .collection('Tasks')
+        .doc(documentSnapshot!.id)
+        .update({"check": value});
   }
 
   Future<void> _deleteTask(String productId) async {
-    await _tasks.doc(productId).delete();
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(auth.currentUser!.uid)
+        .collection('Tasks')
+        .doc(productId)
+        .delete();
   }
 
   @override
@@ -50,6 +72,23 @@ class _TaskScreenState extends State<TaskScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       //backgroundColor: Colors.cyanAccent,
+      appBar: AppBar(
+        title: Text("Tasks"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () async {
+              await _auth.signOut();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
           heroTag: null,
           backgroundColor: Colors.teal,
@@ -149,27 +188,34 @@ class _TaskScreenState extends State<TaskScreen> {
                       ),
                       TextButton(
                         onPressed: () async {
-                          this.setState(() {
+                          this.setState(() async {
                             var uuid = Uuid();
 
                             // Generate a v1 (time-based) id
                             var v1 = uuid.v1();
                             if (newTask!.isNotEmpty && date != null) {
-                              DocumentReference<Map<String, dynamic>> users =
-                                  FirebaseFirestore.instance
-                                      .collection('Tasks')
-                                      .doc(v1);
+                              // DocumentReference<Map<String, dynamic>> users =
                               var myJSONObj = {
                                 "task": newTask,
                                 "time": date,
                                 "check": false,
                               };
-                              users
-                                  .set(myJSONObj)
-                                  .then((value) =>
-                                      print("User with CustomID added"))
-                                  .catchError((error) =>
-                                      print("Failed to add user: $error"));
+                              await FirebaseFirestore.instance
+                                  .collection('Users')
+                                  .doc(auth.currentUser!.uid)
+                                  .collection('Tasks')
+                                  .add(myJSONObj);
+                              // var myJSONObj = {
+                              //   "task": newTask,
+                              //   "time": date,
+                              //   "check": false,
+                              // };
+                              // users
+                              //     .set(myJSONObj)
+                              //     .then((value) =>
+                              //         print("User with CustomID added"))
+                              //     .catchError((error) =>
+                              //         print("Failed to add user: $error"));
 
                               Navigator.pop(context);
                             }
@@ -271,6 +317,8 @@ class _TaskScreenState extends State<TaskScreen> {
                 ),
                 child: StreamBuilder(
                     stream: FirebaseFirestore.instance
+                        .collection('Users')
+                        .doc(auth.currentUser!.uid)
                         .collection('Tasks')
                         .snapshots(),
                     builder: (BuildContext context,
