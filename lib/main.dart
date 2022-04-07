@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_firestore/login_screen.dart';
 import 'package:todo_app_firestore/task_screen.dart';
+import 'package:todo_app_firestore/view_model/task_view_model.dart';
 
-import 'change.dart';
+import 'utils/change_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,10 +22,13 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: Provider.of<ThemeModel>(context).currentTheme,
-      home: InitialerWidget(),
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => TaskModel())],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: Provider.of<ThemeModel>(context).currentTheme,
+        home: InitialerWidget(),
+      ),
     );
   }
 }
@@ -51,6 +55,7 @@ class _InitialerWidgetState extends State<InitialerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    TaskModel model = context.watch<TaskModel>();
     return isLoading
         ? Scaffold(
             body: Center(

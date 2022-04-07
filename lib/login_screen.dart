@@ -2,9 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:todo_app_firestore/task_screen.dart';
+import 'package:todo_app_firestore/utils/app_bar.dart';
+import 'package:todo_app_firestore/utils/constants.dart';
+import 'package:todo_app_firestore/utils/rounded_button.dart';
+import 'package:todo_app_firestore/view_model/task_view_model.dart';
+import 'package:todo_app_firestore/views/mobileForm.dart';
+import 'package:todo_app_firestore/views/otp_form.dart';
 
-import 'change.dart';
+import 'model/status.dart';
 
 TextEditingController phoneController = TextEditingController();
 enum MobileVerificationState {
@@ -220,27 +227,45 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+  Status? current;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    TaskModel mod = new TaskModel();
+    current = mod.getCurrentState();
+    print(current);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-          key: _scaffoldKey,
-          appBar: AppBars(
-            title: Text("Login Page"),
+    TaskModel model = context.watch<TaskModel>();
+    //print(model.currentState);
+    //print(model.setCurrentState());
+    // Status? current = model.getCurrentState();
+    // print(current);
+    return ChangeNotifierProvider(
+      create: (context) => TaskModel(),
+      child: SafeArea(
+        child: Scaffold(
+            //key: _scaffoldKey,
+            appBar: AppBars(
+              title: Text("Login Page"),
+              backgroundColor: Colors.teal,
+              appBar: AppBar(),
+            ),
             backgroundColor: Colors.teal,
-            appBar: AppBar(),
-          ),
-          backgroundColor: Colors.teal,
-          body: Container(
-            child: showSpinner
-                ? Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : currentState == MobileVerificationState.SHOW_MOBILE_FORM_STATE
-                    ? getMobileFormWidget(context)
-                    : getOtpFormWidget(context),
-            padding: EdgeInsets.all(16),
-          )),
+            body: Container(
+              child: model.showSpinner
+                  ? Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : model.currentState == Status.SHOW_MOBILE_FORM_STATE
+                      ? MobileFormWidget()
+                      : OtpForm(),
+              padding: EdgeInsets.all(16),
+            )),
+      ),
     );
   }
 }

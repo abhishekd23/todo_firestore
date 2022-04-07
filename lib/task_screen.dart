@@ -4,12 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:date_field/date_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_firestore/login_screen.dart';
 import 'package:uuid/uuid.dart';
 
-import 'change.dart';
+import 'utils/change_theme.dart';
 
 class TaskScreen extends StatefulWidget {
   TaskScreen(
@@ -32,6 +31,7 @@ class TaskScreen extends StatefulWidget {
 
 class _TaskScreenState extends State<TaskScreen> {
   String? newTask;
+
   String? val;
   bool? isChecked = false;
   DateTime? date;
@@ -62,10 +62,6 @@ class _TaskScreenState extends State<TaskScreen> {
   @override
   void initState() {
     super.initState();
-
-    var initializationSettingsAndroid =
-        AndroidInitializationSettings('app_icon');
-    var initializationSettingsIOs = IOSInitializationSettings();
   }
 
   @override
@@ -205,18 +201,6 @@ class _TaskScreenState extends State<TaskScreen> {
                                   .doc(auth.currentUser!.uid)
                                   .collection('Tasks')
                                   .add(myJSONObj);
-                              // var myJSONObj = {
-                              //   "task": newTask,
-                              //   "time": date,
-                              //   "check": false,
-                              // };
-                              // users
-                              //     .set(myJSONObj)
-                              //     .then((value) =>
-                              //         print("User with CustomID added"))
-                              //     .catchError((error) =>
-                              //         print("Failed to add user: $error"));
-
                               Navigator.pop(context);
                             }
                           });
